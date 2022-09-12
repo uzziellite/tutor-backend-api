@@ -1,5 +1,5 @@
+import {Directus} from "@directus/sdk" 
 const app = require('express')()
-const Directus = require('@directus/sdk')
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')

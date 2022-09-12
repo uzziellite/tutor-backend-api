@@ -7,7 +7,7 @@ const dotenv = require('dotenv')
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 60 minutes
-  max: 10, // Limit each IP to 10 requests per `window` (here, per 60 minutes)
+  max: 100, // Limit each IP to 10 requests per `window` (here, per 60 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
@@ -25,9 +25,9 @@ app.use(cors())
 app.use(helmet())
 
 // custom 404
-app.use((req, res, next) => {
+/*app.use((req, res, next) => {
   res.status(404).send('Ooopsie dooopsie, there is nothing here')
-})
+})*/
 
 const directus = new Directus(process.env.BACKEND_URL,{
   auth:{

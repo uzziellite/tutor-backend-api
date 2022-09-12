@@ -24,6 +24,10 @@ app.use(cors())
 //Protect against common vulnerabilities
 app.use(helmet())
 
+//Intercept json and url encoded entities
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
 // custom 404
 /*app.use((req, res, next) => {
   res.status(404).send('Ooopsie dooopsie, there is nothing here')

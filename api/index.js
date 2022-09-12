@@ -1,9 +1,10 @@
-import {Directus} from "@directus/sdk" 
-const app = require('express')()
+const dotenv = require('dotenv').config({ path: '../.env' })
+const {Directus} = require('@directus/sdk')
+const express = require('express')
+const app = express()
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
-const dotenv = require('dotenv')
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 60 minutes
@@ -12,8 +13,6 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 
-// Set path to .env file
-dotenv.config({ path: './.env' })
 
 // Apply the rate limiting middleware to all requests
 app.use(limiter)
@@ -28,11 +27,6 @@ app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// custom 404
-/*app.use((req, res, next) => {
-  res.status(404).send('Ooopsie dooopsie, there is nothing here')
-})*/
-
 const directus = new Directus(process.env.BACKEND_URL,{
   auth:{
     staticToken: process.env.API_KEY
@@ -42,6 +36,7 @@ const directus = new Directus(process.env.BACKEND_URL,{
 //Send an email invitation to the user to join the project
 app.post('/api/tutor-invite', async(req, res) => {
   const email = req.body.email
+
   await directus.users.invites.send(email, process.env.TUTOR_ROLE).then(() => {
     
     const response = {

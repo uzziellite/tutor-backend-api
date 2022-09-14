@@ -92,69 +92,14 @@ app.post('/api/client', async(req, res) => {
     
     const response = {
       type: "error",
-      message: "Unable to register your account. Please try again"
+      message: "Unable to register your account or account already exists.",
+      reason: err
     }
     
     res.json(response)
 
   })
 
-})
-
-//Request password reset
-app.post('/api/client/password/request', async (req,res) => {
-  const email = req.body.email
-
-
-  await directus.auth.password.request(
-    email,
-    process.env.PUBLIC_WEBAPP
-  ).then(() => {
-    
-    const response = {
-      type: "success",
-      message: "If you are registered with us, an email has already been sent to you with further instructions"
-    }
-
-    res.json(response)
-
-  }).catch((err) => {
-    
-    const response = {
-      type: "error",
-      message: "Sorry, we do not recognize your account"
-    }
-    
-    res.json(response)
-
-  })
-})
-
-
-//Reset the password
-app.post('/api/client/password/reset', async (req,res) => {
-  const token = req.body.token
-  const password = req.body.password
-
-  await directus.auth.password.reset(token, password).then(() => {
-    
-    const response = {
-      type: "success",
-      message: "Password reset successfully. Please login"
-    }
-
-    res.json(response)
-
-  }).catch((err) => {
-    
-    const response = {
-      type: "error",
-      message: "Unable to reset password at the moment. Please try again"
-    }
-    
-    res.json(response)
-
-  })
 })
 
 module.exports = app

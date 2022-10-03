@@ -37,9 +37,21 @@ const createLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 
-//Allow requests from any origin
-app.use(cors())
-app.options('/api/login', cors()) // Enable preflight requests
+//Enable cors requests
+const whitelist = ['http://localhost:3000', 'https://astro-tutor.vercel.app']
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true)
+    } else {
+      callback(new Error('Not allowed by CORS'))
+    }
+  }
+}
+
+app.use(cors(corsOptions))
+//app.options('/api/login', cors()) // Enable preflight requests
 
 //Protect against common vulnerabilities
 app.use(helmet())

@@ -50,8 +50,8 @@ const corsOptions = {
   }
 }
 
-app.use(cors(corsOptions))
-//app.options('/api/login', cors()) // Enable preflight requests
+app.use(cors())
+app.options('/api/login', cors(corsOptions)) // Enable preflight requests
 
 //Protect against common vulnerabilities
 app.use(helmet())

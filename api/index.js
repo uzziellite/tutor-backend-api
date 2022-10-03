@@ -125,7 +125,7 @@ app.post('/api/client', createLimiter, async(req, res) => {
 })
 
 //Login a user to the app
-app.post('/api/login', createLimiter, async(req, res) => {
+app.post('/api/login', async(req, res) => {
   const email = req.body.email
   const password = req.body.password
 

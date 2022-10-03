@@ -1,3 +1,13 @@
+/**
+ * @author Uzziel Kibet
+ * @licence MIT
+ * 
+ * Check Security best practices from the link below and make sure they apply
+ * 
+ * @link https://blog.risingstack.com/node-js-security-checklist/
+ * @link https://github.com/expressjs/express/tree/master/examples
+ */
+
 const dotenv = require('dotenv').config({ path: '../.env' })
 const {Directus} = require('@directus/sdk')
 const express = require('express')
@@ -5,17 +15,27 @@ const app = express()
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
+const cookieSession = require('cookie-session')
+const cookieParser = require('cookie-parser')
 
-const limiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 60 minutes
-  max: 10, // Limit each IP to 10 requests per `window` (here, per 60 minutes)
+//Communicate with directus backend for Content Management
+const directus = new Directus(process.env.BACKEND_URL,{
+  auth:{
+    staticToken: process.env.API_KEY
+  }
+})
+
+const dbAuth = new Directus(process.env.BACKEND_URL)
+
+//Limit some routes
+const createLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5, // Limit each IP to create 5 account requests per `window` (here, per hour)
+  message:
+    'Too many accounts created from this IP for this route, please try again after an hour',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
-
-
-// Apply the rate limiting middleware to all requests
-app.use(limiter)
 
 //Allow requests from any origin
 app.use(cors())
@@ -27,14 +47,30 @@ app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-const directus = new Directus(process.env.BACKEND_URL,{
-  auth:{
-    staticToken: process.env.API_KEY
+//Cookie parser
+app.use(cookie_parser('qwmoiVcx87'))
+
+//Cookie settings
+app.use(cookieSession({
+  name: 'user',
+  keys: ['poQWcsf51vsDUI','AsvcGFuyPiM90JcxX431'],
+
+  // Cookie Options
+  maxAge: 720 * 60 * 60 * 1000 // 30 days
+}))
+
+//Restrict unknown users
+const restrict = (req, res, next) => {
+  if (req.signedCookies.user) {
+    next()
+  } else {
+    req.session.error = 'Access denied!'
+    res.redirect('/login')
   }
-})
+}
 
 //Send an email invitation to the user to join the project
-app.post('/api/tutor-invite', async(req, res) => {
+app.post('/api/tutor-invite', createLimiter, async(req, res) => {
   const email = req.body.email
 
   await directus.users.invites.send(email, process.env.TUTOR_ROLE).then(() => {
@@ -60,7 +96,7 @@ app.post('/api/tutor-invite', async(req, res) => {
 })
 
 //Create a new user
-app.post('/api/client', async(req, res) => {
+app.post('/api/client', createLimiter, async(req, res) => {
   const email = req.body.email
   const password = req.body.password
   const first_name = req.body.first_name
@@ -101,5 +137,37 @@ app.post('/api/client', async(req, res) => {
   })
 
 })
+
+//Login a user
+app.post('/api/login', createLimiter, async(req, res) => {
+  const email = req.body.email
+  const password = req.body.password
+
+  //Authenticate with directus
+  dbAuth.auth.login({
+    email,
+    password
+  }).then(() => {
+    res.cookie('user', email, {signed: true})
+    
+    const data = {
+      "loggedIn":true
+    }
+
+    res.json(data)
+
+  }).catch(error => {
+    const data = {
+      "loggedIn":false,
+      "reason":error
+    }
+
+    res.json(data)
+  })
+  
+})
+
+//Register new students
+app.post('/api/register', createLimiter, async(req, res) => {})
 
 module.exports = app

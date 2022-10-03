@@ -15,8 +15,7 @@ const app = express()
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
-const cookieSession = require('cookie-session')
-const cookieParser = require('cookie-parser')
+const cryptoJS = require('crypto-js')
 
 //Communicate with directus backend for Content Management
 const directus = new Directus(process.env.BACKEND_URL,{
@@ -37,14 +36,7 @@ const createLimiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 })
 
-//Enable cors requests
-const corsOptions = {
-  origin: 'https://astro-tutor.vercel.app',
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
-}
-
 app.use(cors())
-app.options('/api/login', cors(corsOptions)) // Enable preflight requests
 
 //Protect against common vulnerabilities
 app.use(helmet())
@@ -53,19 +45,7 @@ app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-//Cookie parser
-app.use(cookieParser('qwmoiVcx87'))
-
-//Cookie settings
-app.use(cookieSession({
-  name: 'user',
-  keys: ['poQWcsf51vsDUI','AsvcGFuyPiM90JcxX431'],
-
-  // Cookie Options
-  maxAge: 720 * 60 * 60 * 1000 // 30 days
-}))
-
-//Restrict unknown users
+//TODO Restrict unknown users
 const restrict = (req, res, next) => {
   if (req.signedCookies.user) {
     next()
@@ -154,10 +134,14 @@ app.post('/api/login', createLimiter, async(req, res) => {
     email,
     password
   }).then(() => {
-    res.cookie('user', email, {signed: true})
-    
+    //Crypto JS secured string
+    const id = cryptoJS.AES.encrypt(email,process.env.CIPHER_KEY_1).toString()
+    const key = cryptoJS.AES.encrypt(password,process.env.CIPHER_KEY_2).toString()
+
     const data = {
-      "loggedIn":true
+      "loggedIn":true,
+      "_lxc": id,
+      "_xcc": key
     }
 
     res.json(data)

@@ -48,7 +48,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 //Cookie parser
-app.use(cookie_parser('qwmoiVcx87'))
+app.use(cookieParser('qwmoiVcx87'))
 
 //Cookie settings
 app.use(cookieSession({

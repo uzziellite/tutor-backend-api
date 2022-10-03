@@ -39,6 +39,7 @@ const createLimiter = rateLimit({
 
 //Allow requests from any origin
 app.use(cors())
+app.options('/api/login', cors()) // Enable preflight requests
 
 //Protect against common vulnerabilities
 app.use(helmet())

@@ -47,11 +47,7 @@ app.use(express.urlencoded({ extended: true }))
 
 //Decrypt email
 const decrypt = (cipher) => {
-  try{
-    return cryptoJS.AES.decrypt(cipher,process.env.CIPHER_KEY_1)
-  }catch(){
-    return 0
-  }
+  return cryptoJS.AES.decrypt(cipher,process.env.CIPHER_KEY_1)
 }
 
 //Send an email invitation to the user to join the project

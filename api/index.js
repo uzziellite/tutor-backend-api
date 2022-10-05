@@ -45,13 +45,12 @@ app.use(helmet())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-//TODO Restrict unknown users
-const restrict = (req, res, next) => {
-  if (req.signedCookies.user) {
-    next()
-  } else {
-    req.session.error = 'Access denied!'
-    res.redirect('/login')
+//Decrypt email
+const decrypt = (cipher) => {
+  try{
+    return cryptoJS.AES.decrypt(cipher,process.env.CIPHER_KEY_1)
+  }catch(){
+    return 0
   }
 }
 
@@ -134,17 +133,30 @@ app.post('/api/login', async(req, res) => {
     email,
     password
   }).then(() => {
-    //Crypto JS secured string
-    const id = cryptoJS.AES.encrypt(email,process.env.CIPHER_KEY_1).toString()
-    const key = cryptoJS.AES.encrypt(password,process.env.CIPHER_KEY_2).toString()
+    //Get student id
+    directus.items('directus_users').readByQuery({
+      filter:{
+        "email":{
+          "_eq":email
+        }
+      },
+      fields:['id']
+    }).then(resp => {
+      
+      const _lxc = cryptoJS.AES.encrypt(resp.data[0].id,process.env.CIPHER_KEY_1).toString()
 
-    const data = {
-      "loggedIn":true,
-      "_lxc": id,
-      "_xcc": key
-    }
+      const data = {
+        "loggedIn":true,
+        "_lxc": _lxc,
+        "_xcc": 'user'
+      }
 
-    res.json(data)
+      res.json(data)
+
+    }).catch((err) => {
+      console.error(err)
+    })
+    
 
   }).catch(error => {
     const data = {
@@ -157,7 +169,65 @@ app.post('/api/login', async(req, res) => {
   
 })
 
-//Register new students
-app.post('/api/register', createLimiter, async(req, res) => {})
+//Fetch student data
+app.get('/api/student-data', async(req, res) => {
+  const _lxc = decrypt(req.body.lxc)
+  const subject = req.body.subject
+
+  if(email !== 0){
+    directus.items('tut_track_student').readByQuery({
+      filter:{
+        "_and":[
+          {
+            "student":{
+              "email":{
+                "_eq":_lxc
+              }
+            }
+          },
+          {
+            "question":{
+              "sub_topic":{
+                "topic":{
+                  "subject":{
+                    "id":{
+                      "_eq":subject
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      meta:"filter_count"
+    }).then(response => {
+      res.json(response.data)
+    }).catch(err => {
+      res.json({"reason":err})
+    })
+  }else{
+    res.json({"reason":"login"})
+  }
+})
+
+//Save student progress
+app.post('/api/student-data', async(req,res) => {
+  const _lxc = decrypt(req.body._lxc)
+  const time = req.body.time
+  const id = req.body.id
+  const scored = req.body.correct
+
+  await directus.items('tut_track_student').createOne({
+    correctly_answered:scored,
+    time_taken:time,
+    question:id,
+    student:_lxc
+  }).then(() => {
+    res.json({"success":"Data saved successfully"})
+  }).catch(err => {
+    res.json({"error":err})
+  })
+})
 
 module.exports = app

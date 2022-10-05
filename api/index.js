@@ -139,7 +139,7 @@ app.post('/api/login', async(req, res) => {
       fields:['id']
     }).then(resp => {
       
-      const _lxc = cryptoJS.AES.encrypt(resp.data[0].id,process.env.CIPHER_KEY_1).toString()
+      const _lxc = cryptoJS.AES.encrypt(resp.data[0].id,process.env.CIPHER_KEY_1)
 
       const data = {
         "loggedIn":true,

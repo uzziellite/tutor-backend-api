@@ -15,7 +15,7 @@ const app = express()
 const cors = require('cors')
 const rateLimit = require('express-rate-limit')
 const helmet = require('helmet')
-const cryptoJS = require('crypto-js')
+//const cryptoJS = require('crypto-js')
 
 //Communicate with directus backend for Content Management
 const directus = new Directus(process.env.BACKEND_URL,{
@@ -139,7 +139,8 @@ app.post('/api/login', async(req, res) => {
       fields:['id']
     }).then(resp => {
       
-      const _lxc = cryptoJS.AES.encrypt(resp.data[0].id,process.env.CIPHER_KEY_1)
+      //const _lxc = cryptoJS.AES.encrypt(resp.data[0].id,process.env.CIPHER_KEY_1)
+      const _lxc = resp.data[0].id
 
       const data = {
         "loggedIn":true,
@@ -209,7 +210,8 @@ app.get('/api/student-data', async(req, res) => {
 
 //Save student progress
 app.post('/api/student-data', async(req,res) => {
-  const lxc = decrypt(req.body.lxc)
+  //const lxc = decrypt(req.body.lxc)
+  const lxc = req.body.lxc
   const time = req.body.time
   const id = req.body.id
   const scored = req.body.correct
@@ -220,7 +222,7 @@ app.post('/api/student-data', async(req,res) => {
     question:id,
     student:lxc
   }).then(() => {
-    res.json({"success":"Data saved successfully","key":lxc})
+    res.json({"success":"Data saved successfully"})
   }).catch(err => {
     res.json({"error":err})
   })

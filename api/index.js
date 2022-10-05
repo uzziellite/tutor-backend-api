@@ -209,7 +209,7 @@ app.get('/api/student-data', async(req, res) => {
 
 //Save student progress
 app.post('/api/student-data', async(req,res) => {
-  const _lxc = decrypt(req.body._lxc)
+  const lxc = decrypt(req.body.lxc)
   const time = req.body.time
   const id = req.body.id
   const scored = req.body.correct
@@ -218,9 +218,9 @@ app.post('/api/student-data', async(req,res) => {
     correctly_answered:scored,
     time_taken:time,
     question:id,
-    student:_lxc
+    student:lxc
   }).then(() => {
-    res.json({"success":"Data saved successfully"})
+    res.json({"success":"Data saved successfully","key":lxc})
   }).catch(err => {
     res.json({"error":err})
   })

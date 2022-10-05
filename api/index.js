@@ -220,7 +220,8 @@ app.post('/api/student-data', async(req,res) => {
     correctly_answered:scored,
     time_taken:time,
     question:id,
-    student:lxc
+    student:lxc,
+    status:'published'
   }).then(() => {
     res.json({"success":"Data saved successfully"})
   }).catch(err => {

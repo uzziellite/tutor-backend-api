@@ -229,4 +229,26 @@ app.post('/api/student-data', async(req,res) => {
   })
 })
 
+app.post('/api/assesment-progress', async(req,res) => {
+  const student = req.body.student
+  const semester = req.body.semester_id
+  const subject = req.body.subject_id
+  const type = req.body.type
+  const score = req.body.score
+  const status = "published"
+
+  await directus.items('tut_track_assessment').createOne({
+    status,
+    student,
+    semester,
+    subject,
+    type,
+    score
+  }).then(resp => {
+    resp.json({"success":"Assessment copleted successfully and details have bee saved"})
+  }).catch(err => {
+    res.json({"error":err})
+  })
+})
+
 module.exports = app
